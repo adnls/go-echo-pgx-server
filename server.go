@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5"
@@ -30,16 +30,14 @@ type Asset struct {
 
 func (cv *CustomValidator) Validate(i interface{}) error {
 	switch v := i.(type) {
-	case *Asset:
-		if err := cv.validator.Struct(v); err != nil {
-			return err
-		}
 	case *[]Asset:
 		if err := cv.validator.Var(v, "dive"); err != nil {
 			return err
 		}
 	default:
-		return fmt.Errorf("Unsupported")
+		if err := cv.validator.Struct(v); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -149,19 +147,6 @@ func main() {
 			return err
 		}
 
-		batch := new(pgx.Batch)
-		for _, asset := range *assets {
-			args := pgx.NamedArgs{
-				"Type":        asset.Type,
-				"Source":      asset.Source,
-				"Identifiers": asset.Identifiers,
-				"Doc":         asset.Doc,
-				"Components":  asset.Components,
-				"Properties":  asset.Properties,
-			}
-			batch.Queue(sql, args)
-		}
-
 		execFunc := func(tx pgx.Tx) error {
 			batch := new(pgx.Batch)
 			for _, asset := range *assets {
@@ -200,6 +185,46 @@ func main() {
 
 		return c.String(http.StatusOK, "WIP")
 	}).Name = "Upsert multiple assets"
+
+	type SearchParams struct {
+		Q string `query:"q" validate:"required"`
+	}
+
+	type SearchResult struct {
+		Id          int              `db:"id"`
+		Type        string           `db:"type"`
+		Source      string           `db:"source"`
+		Identifiers []string         `db:"identifiers"`
+		Doc         string           `db:"doc"`
+		Components  []map[string]any `db:"components"`
+		Properties  map[string]any   `db:"properties"`
+		CreatedAt   time.Time        `db:"created_at"`
+		ModifiedAt  time.Time        `db:"modified_at"`
+		Rank        float32          `db:"rank"`
+		Content     string           `db:"content"`
+		RowCount    int              `db:"row_count"`
+	}
+
+	searchSQL := "select * from websearch_assets(@Q)"
+
+	assets.GET("/search", func(c echo.Context) error {
+		searchParams := new(SearchParams)
+		if err := c.Bind(searchParams); err != nil {
+			return err
+		}
+		if err := c.Validate(searchParams); err != nil {
+			return err
+		}
+
+		rows, _ := dbpool.Query(context.Background(), searchSQL, pgx.NamedArgs{"Q": searchParams.Q})
+		searchResults, err := pgx.CollectRows(rows, pgx.RowToStructByName[SearchResult])
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, searchResults)
+
+	}).Name = "Search assets"
 
 	if data, err := json.MarshalIndent(server.Routes(), "", "  "); err != nil {
 		log.Fatal(err.Error())

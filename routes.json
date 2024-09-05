@@ -1,5 +1,15 @@
 [
   {
+    "method": "POST",
+    "path": "/api/v1/assets/bulk",
+    "name": "Upsert multiple assets"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/assets/search",
+    "name": "Search assets"
+  },
+  {
     "method": "GET",
     "path": "/",
     "name": "main.main.func1"
@@ -8,10 +18,5 @@
     "method": "POST",
     "path": "/api/v1/assets",
     "name": "Upsert single asset"
-  },
-  {
-    "method": "POST",
-    "path": "/api/v1/assets/bulk",
-    "name": "Upsert multiple assets"
   }
 ]
