@@ -20,7 +20,7 @@ func NewAssetHandler(repo models.AssetRepository) *AssetHandler {
 
 // HelloWorld returns Hello, World
 func (hdlr *AssetHandler) HandleSaveOne(ctx echo.Context) error {
-	var asset models.Asset
+	asset := models.Asset{}
 	if err := ctx.Bind(&asset); err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func (hdlr *AssetHandler) HandleSaveOne(ctx echo.Context) error {
 }
 
 func (hdlr *AssetHandler) HandleSaveMany(ctx echo.Context) error {
-	var assets []models.Asset
+	assets := []models.Asset{}
 	if err := ctx.Bind(&assets); err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (hdlr *AssetHandler) HandleSaveMany(ctx echo.Context) error {
 }
 
 func (hdlr *AssetHandler) HandlerSearch(ctx echo.Context) error {
-	var params models.AssetSearchParams
+	params := models.AssetSearchParams{}
 	if err := ctx.Bind(&params); err != nil {
 		return err
 	}
