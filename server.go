@@ -31,7 +31,7 @@ func main() {
 	server.Logger.SetOutput(io.MultiWriter(os.Stdout, logFile))
 
 	server.HideBanner = true
-	server.HidePort = true
+	server.HidePort = false
 
 	db, err := pgxpool.New(context.TODO(), "postgresql://root:password@localhost:5432/datacatalog")
 	if err != nil {
@@ -78,7 +78,7 @@ type CustomValidator struct {
 
 func (cv *CustomValidator) Validate(i interface{}) error {
 	switch v := i.(type) {
-	case *[]models.Asset:
+	case []models.Asset:
 		if err := cv.validator.Var(v, "dive"); err != nil {
 			return err
 		}

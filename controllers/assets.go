@@ -20,36 +20,36 @@ func NewAssetHandler(repo models.AssetRepository) *AssetHandler {
 
 // HelloWorld returns Hello, World
 func (hdlr *AssetHandler) HandleSaveOne(ctx echo.Context) error {
-	el := new(models.Asset)
-	if err := ctx.Bind(el); err != nil {
+	var asset models.Asset
+	if err := ctx.Bind(&asset); err != nil {
 		return err
 	}
-	if err := ctx.Validate(el); err != nil {
+	if err := ctx.Validate(asset); err != nil {
 		return err
 	}
-	if err := hdlr.repo.SaveOne(el); err != nil {
+	if err := hdlr.repo.SaveOne(asset); err != nil {
 		return err
 	}
 	return ctx.NoContent(http.StatusOK)
 }
 
 func (hdlr *AssetHandler) HandleSaveMany(ctx echo.Context) error {
-	el := new([]models.Asset)
-	if err := ctx.Bind(el); err != nil {
+	var assets []models.Asset
+	if err := ctx.Bind(&assets); err != nil {
 		return err
 	}
-	if err := ctx.Validate(el); err != nil {
+	if err := ctx.Validate(assets); err != nil {
 		return err
 	}
-	if err := hdlr.repo.SaveMany(el); err != nil {
+	if err := hdlr.repo.SaveMany(assets); err != nil {
 		return err
 	}
 	return ctx.NoContent(http.StatusOK)
 }
 
 func (hdlr *AssetHandler) HandlerSearch(ctx echo.Context) error {
-	params := new(models.AssetSearchParams)
-	if err := ctx.Bind(params); err != nil {
+	var params models.AssetSearchParams
+	if err := ctx.Bind(&params); err != nil {
 		return err
 	}
 	if err := ctx.Validate(params); err != nil {

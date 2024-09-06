@@ -33,7 +33,7 @@ const saveAssetSQL = `
 
 const searchAssetSQL = "select * from websearch_assets(@Q)"
 
-func (repo *AssetRepository) SaveOne(asset *models.Asset) error {
+func (repo *AssetRepository) SaveOne(asset models.Asset) error {
 	args := pgx.NamedArgs{
 		"Type":        asset.Type,
 		"Source":      asset.Source,
@@ -49,10 +49,10 @@ func (repo *AssetRepository) SaveOne(asset *models.Asset) error {
 	return pgx.BeginFunc(context.TODO(), repo.Db, execFunc)
 }
 
-func (repo *AssetRepository) SaveMany(assets *[]models.Asset) error {
+func (repo *AssetRepository) SaveMany(assets []models.Asset) error {
 	execFunc := func(tx pgx.Tx) error {
 		batch := new(pgx.Batch)
-		for _, asset := range *assets {
+		for _, asset := range assets {
 			args := pgx.NamedArgs{
 				"Type":        asset.Type,
 				"Source":      asset.Source,
@@ -68,7 +68,7 @@ func (repo *AssetRepository) SaveMany(assets *[]models.Asset) error {
 	return pgx.BeginFunc(context.TODO(), repo.Db, execFunc)
 }
 
-func (repo *AssetRepository) Search(q string) (*[]models.AssetSearchResult, error) {
+func (repo *AssetRepository) Search(q string) ([]models.AssetSearchResult, error) {
 	rows, err := repo.Db.Query(context.TODO(), searchAssetSQL, pgx.NamedArgs{"Q": q})
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (repo *AssetRepository) Search(q string) (*[]models.AssetSearchResult, erro
 	if err != nil {
 		return nil, err
 	}
-	return &assetSearchResults, nil
+	return assetSearchResults, nil
 }
 
 // for i := 0; i < len(*assets); i++ {

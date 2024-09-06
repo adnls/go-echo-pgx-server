@@ -31,7 +31,7 @@ type AssetSearchParams struct {
 }
 
 type AssetRepository interface {
-	SaveOne(a *Asset) error
-	SaveMany(a *[]Asset) error
-	Search(q string) (*[]AssetSearchResult, error)
+	SaveOne(a Asset) error
+	SaveMany(a []Asset) error
+	Search(q string) ([]AssetSearchResult, error)
 }
