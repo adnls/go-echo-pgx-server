@@ -6,47 +6,44 @@ import (
 	"datacatalog/server/models"
 	"datacatalog/server/repositories"
 	"encoding/json"
-	"log"
+	"io"
 	"os"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
-type CustomValidator struct {
-	validator *validator.Validate
-}
-
-func (cv *CustomValidator) Validate(i interface{}) error {
-	switch v := i.(type) {
-	case *[]models.Asset:
-		if err := cv.validator.Var(v, "dive"); err != nil {
-			return err
-		}
-	default:
-		if err := cv.validator.Struct(v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func main() {
+	server := echo.New()
+
+	server.Logger.SetLevel(log.DEBUG)
+
+	logFile, err := os.OpenFile("server.log", os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		server.Logger.Fatal(err)
+	}
+
+	defer logFile.Close()
+
+	server.Logger.SetOutput(io.MultiWriter(os.Stdout, logFile))
+
+	server.HideBanner = true
+	server.HidePort = true
+
 	db, err := pgxpool.New(context.TODO(), "postgresql://root:password@localhost:5432/datacatalog")
 	if err != nil {
-		log.Fatal(err.Error())
+		server.Logger.Fatal(err)
 	}
 	defer db.Close()
 
 	if err := db.Ping(context.TODO()); err != nil {
-		log.Println("Cannot ping db")
+		server.Logger.Warn("Cannot ping db")
 	} else {
-		log.Println("Ping db OK")
+		server.Logger.Info("Ping db OK")
 	}
-
-	server := echo.New()
 
 	server.Validator = &CustomValidator{validator: validator.New(validator.WithRequiredStructEnabled())}
 
@@ -73,6 +70,24 @@ func main() {
 	}
 
 	server.Logger.Fatal(server.Start(":8080"))
+}
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	switch v := i.(type) {
+	case *[]models.Asset:
+		if err := cv.validator.Var(v, "dive"); err != nil {
+			return err
+		}
+	default:
+		if err := cv.validator.Struct(v); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 /*

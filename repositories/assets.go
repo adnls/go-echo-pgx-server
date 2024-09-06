@@ -33,43 +33,43 @@ const saveAssetSQL = `
 
 const searchAssetSQL = "select * from websearch_assets(@Q)"
 
-func (r *AssetRepository) SaveOne(a *models.Asset) error {
+func (repo *AssetRepository) SaveOne(asset *models.Asset) error {
 	args := pgx.NamedArgs{
-		"Type":        a.Type,
-		"Source":      a.Source,
-		"Identifiers": a.Identifiers,
-		"Doc":         a.Doc,
-		"Components":  a.Components,
-		"Properties":  a.Properties,
+		"Type":        asset.Type,
+		"Source":      asset.Source,
+		"Identifiers": asset.Identifiers,
+		"Doc":         asset.Doc,
+		"Components":  asset.Components,
+		"Properties":  asset.Properties,
 	}
 	execFunc := func(tx pgx.Tx) error {
 		_, err := tx.Exec(context.TODO(), saveAssetSQL, args)
 		return err
 	}
-	return pgx.BeginFunc(context.TODO(), r.Db, execFunc)
+	return pgx.BeginFunc(context.TODO(), repo.Db, execFunc)
 }
 
-func (r *AssetRepository) SaveMany(a *[]models.Asset) error {
+func (repo *AssetRepository) SaveMany(assets *[]models.Asset) error {
 	execFunc := func(tx pgx.Tx) error {
 		batch := new(pgx.Batch)
-		for _, el := range *a {
+		for _, asset := range *assets {
 			args := pgx.NamedArgs{
-				"Type":        el.Type,
-				"Source":      el.Source,
-				"Identifiers": el.Identifiers,
-				"Doc":         el.Doc,
-				"Components":  el.Components,
-				"Properties":  el.Properties,
+				"Type":        asset.Type,
+				"Source":      asset.Source,
+				"Identifiers": asset.Identifiers,
+				"Doc":         asset.Doc,
+				"Components":  asset.Components,
+				"Properties":  asset.Properties,
 			}
 			batch.Queue(saveAssetSQL, args)
 		}
 		return tx.SendBatch(context.TODO(), batch).Close()
 	}
-	return pgx.BeginFunc(context.TODO(), r.Db, execFunc)
+	return pgx.BeginFunc(context.TODO(), repo.Db, execFunc)
 }
 
-func (r *AssetRepository) Search(q string) (*[]models.AssetSearchResult, error) {
-	rows, err := r.Db.Query(context.TODO(), searchAssetSQL, pgx.NamedArgs{"Q": q})
+func (repo *AssetRepository) Search(q string) (*[]models.AssetSearchResult, error) {
+	rows, err := repo.Db.Query(context.TODO(), searchAssetSQL, pgx.NamedArgs{"Q": q})
 	if err != nil {
 		return nil, err
 	}
