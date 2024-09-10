@@ -50,6 +50,13 @@ func main() {
 	server.Use(middleware.Logger())
 	server.Use(middleware.Recover())
 
+	server.Use(middleware.Static("../../datacatalog/app"))
+
+	// server.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+	// 	HTML5: true,
+	// 	Root:  "../../datacatalog/app",
+	// }))
+
 	apiv1 := server.Group("/api/v1")
 
 	assets := apiv1.Group("/assets")
@@ -76,6 +83,7 @@ type CustomValidator struct {
 	validator *validator.Validate
 }
 
+// TODO custom validator??
 func (cv *CustomValidator) Validate(i interface{}) error {
 	switch v := i.(type) {
 	case []models.Asset:
